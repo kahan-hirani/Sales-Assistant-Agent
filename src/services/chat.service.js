@@ -6,6 +6,7 @@
 const { v4: uuidv4 } = require('uuid');
 const { runAgent } = require('../agents/salesAgent');
 const { generateAndSaveEval } = require('./eval.service');
+const { summarizeOldMemory, getSummarizationStatus } = require('./memorySummarizer.service');
 const memoryStore = require('../memory');
 const { EvalLog } = require('../db/models');
 const logger = require('../config/logger');
@@ -51,7 +52,19 @@ async function sendMessage(userId, message) {
     // But log the error for investigation
   }
   
-  // Step 4: Generate and save evaluation
+  // Step 4: Check if memory summarization is needed
+  // Triggered automatically after 20 messages to compress old conversations
+  let summarizationResult = null;
+  try {
+    summarizationResult = await summarizeOldMemory(userId, sessionId);
+    if (summarizationResult.summarized) {
+      logger.info(`Memory summarized: compressed ${summarizationResult.messagesCompressed} messages into summary`);
+    }
+  } catch (sumError) {
+    logger.warn('Automatic summarization failed (non-critical):', sumError.message);
+  }
+  
+  // Step 5: Generate and save evaluation
   const evalResult = await generateAndSaveEval({
     userId,
     sessionId,
@@ -66,7 +79,8 @@ async function sendMessage(userId, message) {
     response,
     eval: evalResult,
     tools_called: toolsCalled,
-    session_id: sessionId
+    session_id: sessionId,
+    summarization: summarizationResult
   };
 }
 
@@ -116,8 +130,18 @@ async function deleteMemory(userId) {
   };
 }
 
+/**
+ * Get summarization status for a user
+ * @param {string} userId - User ID
+ * @returns {Object} Summarization status
+ */
+async function getSummarizationInfo(userId) {
+  return await getSummarizationStatus(userId);
+}
+
 module.exports = {
   sendMessage,
   getHistory,
-  deleteMemory
+  deleteMemory,
+  getSummarizationInfo
 };

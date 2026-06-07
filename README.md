@@ -50,6 +50,8 @@ The **Sales Agent API** is an intelligent conversational AI system designed to a
 - **Context-aware**: References previous conversations automatically
 - **Fact extraction**: Identifies user preferences and saves them as durable facts
 - **Self-healing**: Falls back to predefined responses if LLM fails
+- **Memory Summarization** (Bonus): Automatically compresses old conversations after 20 messages to reduce token usage and maintain essential context
+- **Memory Summarization**: Automatically compresses old conversations after 20 messages to reduce token usage and maintain essential context (Bonus Feature)
 
 ### 💾 Persistence
 - **PostgreSQL storage**: All conversations, facts, and evaluations stored
@@ -351,6 +353,75 @@ CREATE INDEX idx_eval_logs_flagged ON eval_logs(flagged) WHERE flagged = true;
 
 ---
 
+## 🧠 Memory Summarization (Bonus Feature)
+
+### Why Memory Summarization?
+
+After days or weeks of conversations, storing every single message becomes inefficient:
+- **Token Costs**: LLM calls get expensive with long contexts
+- **Noise Accumulation**: Old detailed messages lose relevance
+- **Performance**: Database queries slow down with thousands of rows
+- **Context Window Limits**: Eventually hit LLM max token limits
+
+### How It Works
+
+**Automatic Trigger:**
+- Activates after **20 conversation turns**
+- Compresses oldest **15 messages** into **1 summary**
+- Keeps **5 most recent messages** in full detail
+- Saves summary as `MemoryFact` for long-term retention
+
+**Example Timeline:**
+
+```
+Day 1: User asks about Enterprise pricing (Messages 1-2)
+Day 2: User asks about SSO (Messages 3-4)
+Day 3: Follow-up questions (Messages 5-20)
+
+→ AUTOMATIC SUMMARIZATION TRIGGERED ←
+
+[Old Messages 1-15] → Compressed to → "Summary: User showed interest in Enterprise plan, asked about SSO and audit logs. Has 50-person team."
+
+[Recent Messages 16-20] → Kept in full detail for immediate context
+```
+
+### Summary Format
+
+Generated summaries include:
+- Plans/products discussed
+- Key features asked about
+- Team size/context mentioned
+- Purchase timeline/intent
+- Objections or concerns
+
+**Example Generated Summary:**
+```
+"User showed interest in Enterprise plan ($499/mo) and asked about SSO, audit logs, and unlimited users. They have a team of 50 people and are comparing against competitor solutions. Timeline is Q2 2024."
+```
+
+### Storage Efficiency
+
+| Metric | Without Summarization | With Summarization |
+|--------|----------------------|-------------------|
+| After 100 messages | 100 rows in DB | ~20 rows (4 summaries + recent msgs) |
+| Context sent to LLM | 100 message objects | ~20 objects (summaries + recent) |
+| Token usage | ~8,000 tokens | ~1,500 tokens |
+| Relevance | Low (old noise) | High (compressed insights) |
+
+### Manual Control
+
+Users can also manually trigger summarization:
+
+```bash
+# Check summarization status
+GET /chat/:userId/summarize/status
+
+# Force immediate summarization
+POST /chat/:userId/summarize
+```
+
+---
+
 ## 📚 API Documentation
 
 ### Base URL
@@ -561,6 +632,55 @@ GET /evals/global/stats
       "flaggedCount": 5,
       "flaggedPercentage": 5
     }
+  }
+}
+```
+
+#### 8. Trigger Memory Summarization (Bonus)
+Manually compress old conversation history into a summary.
+
+```http
+POST /chat/:userId/summarize
+```
+
+**Response (200):**
+```json
+{
+  "success": true,
+  "data": {
+    "summarized": true,
+    "summary": "User showed interest in Enterprise plan ($499/mo) and asked about SSO, audit logs, and unlimited users. They have a team of 50 people.",
+    "messagesCompressed": 15,
+    "messagesKept": 5,
+    "summaryFact": "Past conversation summary: User showed interest in Enterprise plan..."
+  }
+}
+```
+
+#### 9. Get Summarization Status (Bonus)
+Check message count and summarization readiness.
+
+```http
+GET /chat/:userId/summarize/status
+```
+
+**Response (200):**
+```json
+{
+  "success": true,
+  "data": {
+    "userId": "demo_user_001",
+    "totalMessages": 18,
+    "threshold": 20,
+    "messagesUntilSummarization": 2,
+    "willSummarize": false,
+    "existingSummaries": 1,
+    "recentSummaries": [
+      {
+        "summary": "User explored Growth and Enterprise plans...",
+        "createdAt": "2024-01-14T10:30:00.000Z"
+      }
+    ]
   }
 }
 ```

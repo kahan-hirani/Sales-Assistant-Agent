@@ -704,6 +704,150 @@
         }
       ],
       "description": "Utility requests for managing test environment and variables"
+    },
+    {
+      "name": "🧠 Memory Summarization (Bonus)",
+      "item": [
+        {
+          "name": "Get Summarization Status",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/chat/{{user_id}}/summarize/status",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "chat", "{{user_id}}", "summarize", "status"]
+            },
+            "description": "Check message count and when automatic summarization will trigger (after 20 messages)"
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function() {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Response has status info', function() {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.success).to.be.true;",
+                  "    pm.expect(jsonData.data).to.have.property('totalMessages');",
+                  "    pm.expect(jsonData.data).to.have.property('threshold');",
+                  "    pm.expect(jsonData.data).to.have.property('messagesUntilSummarization');",
+                  "    pm.expect(jsonData.data).to.have.property('existingSummaries');",
+                  "});",
+                  "",
+                  "// Show status in console",
+                  "const data = pm.response.json().data;",
+                  "console.log('📊 Summarization Status:');",
+                  "console.log('  Total Messages:', data.totalMessages);",
+                  "console.log('  Threshold:', data.threshold);",
+                  "console.log('  Until Summarization:', data.messagesUntilSummarization);",
+                  "console.log('  Existing Summaries:', data.existingSummaries);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Trigger Manual Summarization",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/chat/{{user_id}}/summarize",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "chat", "{{user_id}}", "summarize"]
+            },
+            "description": "Manually trigger memory summarization to compress old conversations into a summary"
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function() {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Response indicates summarization result', function() {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.success).to.be.true;",
+                  "    pm.expect(jsonData.data).to.have.property('summarized');",
+                  "});",
+                  "",
+                  "// Log the result",
+                  "const data = pm.response.json().data;",
+                  "if (data.summarized) {",
+                  "    console.log('✅ Summarization successful!');",
+                  "    console.log('  Messages compressed:', data.messagesCompressed);",
+                  "    console.log('  Messages kept:', data.messagesKept);",
+                  "    console.log('  Summary:', data.summary);",
+                  "} else {",
+                  "    console.log('ℹ️ No summarization performed:', data.reason);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Test Full Summarization Flow",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "https://postman-echo.com/get?test=summarization",
+              "protocol": "https",
+              "host": ["postman-echo", "com"],
+              "path": ["get"],
+              "query": [
+                {
+                  "key": "test",
+                  "value": "summarization"
+                }
+              ]
+            },
+            "description": "Helper request to document the complete summarization testing workflow"
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "console.log('🧠 MEMORY SUMMARIZATION TEST WORKFLOW');",
+                  "console.log('=====================================');",
+                  "console.log('');",
+                  "console.log('Step 1: Send 20+ messages to trigger automatic summarization');",
+                  "console.log('        Or use: POST /chat/{userId}/summarize (manual trigger)');",
+                  "console.log('');",
+                  "console.log('Step 2: Check status: GET /chat/{userId}/summarize/status');",
+                  "console.log('');",
+                  "console.log('Step 3: Verify summaries saved as MemoryFacts');",
+                  "console.log('        GET /chat/{userId}/history (shows reduced message count)');",
+                  "console.log('');",
+                  "console.log('Expected Behavior:');",
+                  "console.log('- After 20 messages: automatic compression of oldest 15');",
+                  "console.log('- Recent 5 messages kept in full detail');",
+                  "console.log('- Summary saved as MemoryFact for long-term retention');",
+                  "console.log('');",
+                  "pm.test('Documentation displayed', function() {",
+                  "    pm.expect(true).to.be.true;",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        }
+      ],
+      "description": "Memory summarization endpoints - automatically compresses old conversations after 20 messages to maintain essential context while reducing token usage"
     }
   ],
   "event": [
