@@ -11,7 +11,7 @@ const swaggerOptions = {
     info: {
       title: 'Sales Agent API',
       description: [
-        '🚀 Production-ready AI Sales Assistant API',
+        'Production-ready AI Sales Assistant API',
         '',
         'This API provides an intelligent conversational AI that helps prospects understand product plans and pricing.',
         '',

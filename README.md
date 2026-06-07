@@ -1,4 +1,4 @@
-# Sales Agent API 🤖
+# Sales Agent API
 
 [![Node.js](https://img.shields.io/badge/Node.js-20+-green.svg)](https://nodejs.org/)
 [![Express](https://img.shields.io/badge/Express-4.x-blue.svg)](https://expressjs.com/)
@@ -8,7 +8,13 @@
 
 A **production-ready Persistent Sales Assistant Agent API** built with Node.js, Express, Sequelize ORM, PostgreSQL, and Groq LLM. This intelligent conversational AI helps prospects understand product plans and pricing while maintaining persistent memory across sessions.
 
-## 📖 Table of Contents
+## Live Demo
+
+**Production URL:** [https://sales-assistant-agent-production-10de.up.railway.app](https://sales-assistant-agent-production-10de.up.railway.app)
+
+**Interactive API Docs:** [https://sales-assistant-agent-production-10de.up.railway.app/api-docs](https://sales-assistant-agent-production-10de.up.railway.app/api-docs)
+
+## Table of Contents
 
 1. [Project Overview](#project-overview)
 2. [Key Features](#key-features)
@@ -24,7 +30,7 @@ A **production-ready Persistent Sales Assistant Agent API** built with Node.js, 
 
 ---
 
-## 🎯 Project Overview
+## Project Overview
 
 The **Sales Agent API** is an intelligent conversational AI system designed to act as a virtual sales representative for SaaS products. Unlike simple chatbots, this system:
 
@@ -36,16 +42,16 @@ The **Sales Agent API** is an intelligent conversational AI system designed to a
 
 ### Use Cases
 
-- 🤝 **Lead Qualification**: Automatically answer pricing and feature questions
-- 💬 **Customer Support**: Handle repetitive sales inquiries 24/7
-- 📊 **Analytics**: Track response quality and user satisfaction
-- 🔒 **Compliance**: GDPR-ready with full audit trails
+- **Lead Qualification**: Automatically answer pricing and feature questions
+- **Customer Support**: Handle repetitive sales inquiries 24/7
+- **Analytics**: Track response quality and user satisfaction
+- **Compliance**: GDPR-ready with full audit trails
 
 ---
 
-## ✨ Key Features
+## Key Features
 
-### 🤖 AI Capabilities
+### AI Capabilities
 - **Multi-tool agent**: Uses `get_user_memory`, `search_catalog`, and `flag_for_human` tools
 - **Context-aware**: References previous conversations automatically
 - **Fact extraction**: Identifies user preferences and saves them as durable facts
@@ -53,18 +59,18 @@ The **Sales Agent API** is an intelligent conversational AI system designed to a
 - **Memory Summarization** (Bonus): Automatically compresses old conversations after 20 messages to reduce token usage and maintain essential context
 - **Memory Summarization**: Automatically compresses old conversations after 20 messages to reduce token usage and maintain essential context (Bonus Feature)
 
-### 💾 Persistence
+### Persistence
 - **PostgreSQL storage**: All conversations, facts, and evaluations stored
 - **Session tracking**: Unique session IDs per conversation for audit trails
 - **Memory abstraction**: Swappable backend (easy to switch to Redis/Mem0)
 
-### 📊 Quality Assurance
+### Quality Assurance
 - **Dual LLM pattern**: Primary response + secondary evaluation LLM
 - **Three-dimension scoring**: Groundedness, Relevance, Confidence (0-1 scale)
 - **Auto-flagging**: Low-quality responses escalated automatically
 - **No silent failures**: Every response includes eval block
 
-### 🛡️ Production Ready
+### Production Ready
 - **Structured logging**: Winston with JSON format and correlation IDs
 - **Input validation**: Joi schemas for all endpoints
 - **Error handling**: Centralized error handler with proper HTTP codes
@@ -73,7 +79,7 @@ The **Sales Agent API** is an intelligent conversational AI system designed to a
 
 ---
 
-## 🏗️ Technology Stack
+## Technology Stack
 
 | Layer | Technology | Purpose |
 |-------|-----------|---------|
@@ -90,7 +96,7 @@ The **Sales Agent API** is an intelligent conversational AI system designed to a
 
 ---
 
-## 🏛️ System Architecture
+## System Architecture
 
 ### High-Level Flow
 
@@ -170,7 +176,7 @@ POST /chat/:userId
 
 ---
 
-## 🗄️ Database Schema
+## Database Schema
 
 ### Entity Relationship Diagram
 
@@ -353,7 +359,7 @@ CREATE INDEX idx_eval_logs_flagged ON eval_logs(flagged) WHERE flagged = true;
 
 ---
 
-## 🧠 Memory Summarization (Bonus Feature)
+## Memory Summarization (Bonus Feature)
 
 ### Why Memory Summarization?
 
@@ -422,7 +428,7 @@ POST /chat/:userId/summarize
 
 ---
 
-## 📚 API Documentation
+## API Documentation
 
 ### Base URL
 - **Local:** `http://localhost:3000/api/v1`
@@ -687,7 +693,7 @@ GET /chat/:userId/summarize/status
 
 ---
 
-## 🚀 Quick Start
+## Quick Start
 
 ### Prerequisites
 - Node.js 20+
@@ -755,7 +761,7 @@ curl -X POST http://localhost:3000/api/v1/chat/test_user_001 \
 
 ---
 
-## ⚙️ Configuration
+## Configuration
 
 ### Environment Variables
 
@@ -782,7 +788,7 @@ DATABASE_URL=postgresql://user:pass@host.railway.app:5432/dbname
 
 ---
 
-## 🚢 Deployment
+## Deployment
 
 ### Railway (Recommended)
 
@@ -837,7 +843,7 @@ docker run -d \
 
 ---
 
-## 📊 Monitoring
+## Monitoring
 
 ### Health Checks
 ```bash
@@ -860,7 +866,7 @@ Production: JSON logs to `logs/` directory
 
 ---
 
-## 🤝 Contributing
+## Contributing
 
 1. Fork the repository
 2. Create feature branch: `git checkout -b feature/amazing-feature`
@@ -876,13 +882,13 @@ Production: JSON logs to `logs/` directory
 
 ---
 
-## 📄 License
+## License
 
 MIT License - see LICENSE file for details
 
 ---
 
-## 🆘 Support
+## Support
 
 For issues or questions:
 1. Check this README
@@ -892,7 +898,7 @@ For issues or questions:
 
 ---
 
-## 🙏 Acknowledgments
+## Acknowledgments
 
 - [Groq](https://groq.com/) for fast LLM inference
 - [Sequelize](https://sequelize.org/) for ORM

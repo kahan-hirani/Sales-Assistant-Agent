@@ -11,7 +11,7 @@
  *     description: |
  *       Check API health status and database connectivity.
  *       Returns system status, timestamp, version, and database connection state.
- *     tags: [🚀 Getting Started]
+ *     tags: [Getting Started]
  *     responses:
  *       200:
  *         description: API is healthy
@@ -60,7 +60,7 @@
  *     description: |
  *       Retrieve the complete product catalog including all plans, addons, and FAQ.
  *       This data is used by the AI agent to answer pricing and feature questions.
- *     tags: [📚 Catalog]
+ *     tags: [Catalog]
  *     responses:
  *       200:
  *         description: Catalog retrieved successfully
@@ -109,7 +109,7 @@
  *       
  *       **Note**: The userId can be any unique string. Use the same userId to maintain
  *       conversation continuity across sessions.
- *     tags: [💬 Chat]
+ *     tags: [Chat]
  *     parameters:
  *       - in: path
  *         name: userId
@@ -187,7 +187,7 @@
  *     description: |
  *       Retrieve all conversation turns for a specific user across all sessions.
  *       Returns messages in chronological order (oldest first).
- *     tags: [💬 Chat]
+ *     tags: [Chat]
  *     parameters:
  *       - in: path
  *         name: userId
@@ -236,7 +236,7 @@
  *     description: |
  *       Retrieve quality evaluation statistics and detailed scores for a specific user.
  *       Includes average scores, flagged count, and individual evaluation records.
- *     tags: [📊 Analytics]
+ *     tags: [Analytics]
  *     parameters:
  *       - in: path
  *         name: userId
@@ -292,7 +292,7 @@
  *   delete:
  *     summary: Delete User Memory (GDPR)
  *     description: |
- *       **⚠️ WARNING: This action is irreversible!**
+ *       **WARNING: This action is irreversible!**
  *       
  *       Delete all data associated with a user including:
  *       - All conversation history
@@ -300,7 +300,7 @@
  *       - All evaluation logs
  *       
  *       This endpoint supports GDPR compliance and user data deletion requests.
- *     tags: [💬 Chat]
+ *     tags: [Chat]
  *     parameters:
  *       - in: path
  *         name: userId
@@ -341,7 +341,7 @@
  *     description: |
  *       Retrieve aggregated evaluation statistics across all users.
  *       Useful for monitoring overall system quality and performance.
- *     tags: [📊 Analytics]
+ *     tags: [Analytics]
  *     responses:
  *       200:
  *         description: Global statistics retrieved
