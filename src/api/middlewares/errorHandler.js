@@ -1,8 +1,3 @@
-/**
- * Global Error Handler Middleware
- * Express 4-parameter error handling middleware
- */
-
 const logger = require('../../config/logger');
 
 // Custom error classes

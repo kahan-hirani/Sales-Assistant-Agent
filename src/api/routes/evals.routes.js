@@ -1,8 +1,3 @@
-/**
- * Evaluations Routes
- * Dedicated route for evaluation-related endpoints
- */
-
 const express = require('express');
 const router = express.Router();
 const evalService = require('../../services/eval.service');

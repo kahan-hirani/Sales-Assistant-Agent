@@ -1,8 +1,3 @@
-/**
- * searchCatalog Tool
- * Keyword search over the product catalog
- */
-
 const fs = require('fs');
 const path = require('path');
 

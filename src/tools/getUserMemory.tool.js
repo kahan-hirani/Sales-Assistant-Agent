@@ -1,8 +1,3 @@
-/**
- * getUserMemory Tool
- * Retrieves user conversation history and extracted facts from memory
- */
-
 const memoryStore = require('../memory');
 
 /**

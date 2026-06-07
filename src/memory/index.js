@@ -1,13 +1,3 @@
-/**
- * Memory Store Factory
- * Returns the appropriate memory store implementation based on MEMORY_BACKEND env var
- * 
- * To swap to Redis or Mem0:
- * 1. Implement IMemoryStore interface in a new file (e.g., redisMemory.js)
- * 2. Update MEMORY_BACKEND env var
- * 3. Add the new case in the factory below
- */
-
 const config = require('../config/env');
 const SequelizeMemoryStore = require('./sequelizeMemory');
 const logger = require('../config/logger');

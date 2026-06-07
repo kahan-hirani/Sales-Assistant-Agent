@@ -1,9 +1,3 @@
-/**
- * IMemoryStore - Abstract Base Class
- * Defines the contract for all memory store implementations.
- * Any future backend (Redis, Mem0, Mongo) must extend this class.
- */
-
 class IMemoryStore {
   /**
    * Save a conversation message/turn

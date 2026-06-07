@@ -1,8 +1,3 @@
-/**
- * Swagger Configuration
- * API documentation specification
- */
-
 const swaggerJsdoc = require('swagger-jsdoc');
 
 const swaggerOptions = {

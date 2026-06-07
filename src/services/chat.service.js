@@ -1,8 +1,3 @@
-/**
- * Chat Service
- * Orchestrates agent → memory → eval → response
- */
-
 const { v4: uuidv4 } = require('uuid');
 const { runAgent } = require('../agents/salesAgent');
 const { generateAndSaveEval } = require('./eval.service');

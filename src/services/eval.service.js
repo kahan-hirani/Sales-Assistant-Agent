@@ -1,8 +1,3 @@
-/**
- * Evaluation Service
- * Structures, validates, and logs evaluation blocks
- */
-
 const { runEvaluation } = require('../agents/evalLogic');
 const { EvalLog } = require('../db/models');
 const { flagForHuman } = require('../tools/flagForHuman.tool');

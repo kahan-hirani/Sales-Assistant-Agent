@@ -1,8 +1,3 @@
-/**
- * Environment Configuration Validator
- * Validates all required environment variables on startup
- */
-
 require('dotenv').config();
 
 const logger = require('./logger');

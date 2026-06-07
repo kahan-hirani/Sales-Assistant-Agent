@@ -1,8 +1,3 @@
-/**
- * Server Entry Point
- * Starts the Express application
- */
-
 const app = require('./src/app');
 const { sequelize, authenticate } = require('./src/db/models');
 const config = require('./src/config/env');

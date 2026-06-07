@@ -1,8 +1,3 @@
-/**
- * Validation Middleware Factory
- * Creates Express middleware for Joi schema validation
- */
-
 const Joi = require('joi');
 const { ValidationError } = require('./errorHandler');
 

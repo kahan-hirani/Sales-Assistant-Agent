@@ -1,8 +1,3 @@
-/**
- * Chat Service Tests
- * Tests for chat.service.js business logic
- */
-
 const chatService = require('../src/services/chat.service');
 const { runAgent } = require('../src/agents/salesAgent');
 const { generateAndSaveEval } = require('../src/services/eval.service');

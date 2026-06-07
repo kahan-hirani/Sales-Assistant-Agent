@@ -1,8 +1,3 @@
-/**
- * Health Routes
- * Health check endpoint for monitoring
- */
-
 const express = require('express');
 const router = express.Router();
 const { sequelize } = require('../../db/models');

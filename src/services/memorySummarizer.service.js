@@ -1,26 +1,3 @@
-/**
- * Memory Summarizer Service
- * Automatically compresses old conversation history into concise summaries
- * 
- * WHY THIS IS USEFUL:
- * - After 20+ messages, the context becomes bloated with old details
- * - LLM token limits and costs increase with full history
- * - Old conversations lose relevance over time
- * - Summaries retain key facts (interests, decisions, objections) without noise
- * 
- * STRATEGY:
- * - Trigger after every 20 messages
- * - Compress oldest 15 messages into 1 summary
- * - Delete the 15 detailed messages
- * - Keep recent 5 messages in full detail for immediate context
- * - Save summary as MemoryFact for long-term retention
- * 
- * TIMELINE:
- * Day 1-3: Full detail preserved (first 20 messages)
- * Day 4+: Automatic compression of old conversations
- * Result: After months, you have summaries + recent context, not thousands of messages
- */
-
 const { Groq } = require('groq-sdk');
 const config = require('../config/env');
 const memoryStore = require('../memory');

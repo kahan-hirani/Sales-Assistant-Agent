@@ -1,8 +1,3 @@
-/**
- * Tool Tests
- * Tests for searchCatalog, getUserMemory, and flagForHuman tools
- */
-
 const { searchCatalog, SEARCH_CATALOG_DEF } = require('../src/tools/searchCatalog.tool');
 const { getUserMemory, GET_USER_MEMORY_DEF } = require('../src/tools/getUserMemory.tool');
 const { flagForHuman, FLAG_FOR_HUMAN_DEF } = require('../src/tools/flagForHuman.tool');

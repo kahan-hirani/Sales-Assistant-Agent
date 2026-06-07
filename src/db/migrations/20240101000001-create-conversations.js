@@ -1,7 +1,3 @@
-/**
- * Migration: Create Conversations Table
- */
-
 module.exports = {
   up: async (queryInterface, Sequelize) => {
     await queryInterface.createTable('conversations', {

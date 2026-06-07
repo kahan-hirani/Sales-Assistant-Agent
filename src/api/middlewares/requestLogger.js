@@ -1,7 +1,3 @@
-/**
- * Request Logger Middleware
- * Logs every incoming request with requestId
- */
 
 const { v4: uuidv4 } = require('uuid');
 const logger = require('../../config/logger');

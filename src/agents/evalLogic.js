@@ -1,8 +1,3 @@
-/**
- * Evaluation Logic
- * Self-scoring second LLM call for quality evaluation
- */
-
 const { Groq } = require('groq-sdk');
 const config = require('../config/env');
 const logger = require('../config/logger');

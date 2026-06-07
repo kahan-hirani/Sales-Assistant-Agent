@@ -1,8 +1,3 @@
-/**
- * MemoryFact Model
- * Stores extracted facts about users from conversations
- */
-
 module.exports = (sequelize, DataTypes) => {
   const MemoryFact = sequelize.define('MemoryFact', {
     id: {

@@ -1,8 +1,3 @@
-/**
- * Winston Logger Singleton
- * Structured JSON logging for production, colorized for development
- */
-
 const winston = require('winston');
 const { AsyncLocalStorage } = require('async_hooks');
 const path = require('path');

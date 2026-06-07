@@ -1,8 +1,3 @@
-/**
- * Express Application Setup
- * Configures middleware and routes
- */
-
 require('dotenv').config();
 require('./config/env'); // Validates env vars, crashes if missing
 

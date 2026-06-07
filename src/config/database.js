@@ -1,14 +1,3 @@
-/**
- * Sequelize Database Configuration
- * Supports local development, Docker, Supabase, and cloud deployments
- * 
- * IMPORTANT: Supabase Configuration
- * - Use Session Pooler port (6543) for connection pooling
- * - Must enable SSL with rejectUnauthorized: false
- * - Connection limit: 10 for free tier, 30 for Pro
- * - Always use IPv4 (enable IPv4 addon if needed)
- */
-
 const config = require('./env');
 
 // Detect if using Supabase (session pooler or direct connection)

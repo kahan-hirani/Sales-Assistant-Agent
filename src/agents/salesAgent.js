@@ -1,8 +1,3 @@
-/**
- * Sales Agent
- * Main agent loop with explicit tool execution (no complex loop)
- */
-
 const { Groq } = require('groq-sdk');
 const config = require('../config/env');
 const { TOOL_HANDLERS } = require('./toolRegistry');

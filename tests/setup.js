@@ -1,8 +1,3 @@
-/**
- * Jest Setup File
- * Configures test environment
- */
-
 // Set test environment
 process.env.NODE_ENV = 'test';
 process.env.GROQ_API_KEY = 'test-groq-api-key';

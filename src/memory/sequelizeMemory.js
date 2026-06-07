@@ -1,16 +1,8 @@
-/**
- * SequelizeMemoryStore
- * PostgreSQL implementation of IMemoryStore using Sequelize ORM
- */
-
 const IMemoryStore = require('./IMemoryStore');
 const { Conversation, MemoryFact } = require('../db/models');
 const logger = require('../config/logger');
 
 class SequelizeMemoryStore extends IMemoryStore {
-  /**
-   * Save a conversation message/turn
-   */
   async saveMessage({ userId, sessionId, role, content, toolsCalled = [] }) {
     try {
       const message = await Conversation.create({

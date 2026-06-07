@@ -1,8 +1,3 @@
-/**
- * Memory Store Tests
- * Tests for IMemoryStore abstraction and Sequelize implementation
- */
-
 const IMemoryStore = require('../src/memory/IMemoryStore');
 const SequelizeMemoryStore = require('../src/memory/sequelizeMemory');
 

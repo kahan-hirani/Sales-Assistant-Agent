@@ -1,9 +1,3 @@
-/**
- * Sequelize Models Index
- * Initializes Sequelize and exports all models
- * Optimized for Supabase with connection pooling and retry logic
- */
-
 const { Sequelize, DataTypes } = require('sequelize');
 const path = require('path');
 const logger = require('../../config/logger');

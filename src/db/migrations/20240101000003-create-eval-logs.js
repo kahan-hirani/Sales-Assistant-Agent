@@ -1,7 +1,3 @@
-/**
- * Migration: Create Eval Logs Table
- */
-
 module.exports = {
   up: async (queryInterface, Sequelize) => {
     await queryInterface.createTable('eval_logs', {

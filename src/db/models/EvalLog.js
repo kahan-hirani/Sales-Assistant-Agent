@@ -1,8 +1,3 @@
-/**
- * EvalLog Model
- * Stores evaluation scores and metrics for each AI response
- */
-
 module.exports = (sequelize, DataTypes) => {
   const EvalLog = sequelize.define('EvalLog', {
     id: {

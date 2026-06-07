@@ -1,8 +1,3 @@
-/**
- * flagForHuman Tool
- * Escalates conversation to human review
- */
-
 const { v4: uuidv4 } = require('uuid');
 const logger = require('../config/logger');
 const { EvalLog } = require('../db/models');

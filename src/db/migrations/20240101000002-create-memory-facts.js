@@ -1,7 +1,3 @@
-/**
- * Migration: Create Memory Facts Table
- */
-
 module.exports = {
   up: async (queryInterface, Sequelize) => {
     await queryInterface.createTable('memory_facts', {

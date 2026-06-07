@@ -1,8 +1,3 @@
-/**
- * Catalog Routes
- * Returns product catalog information
- */
-
 const express = require('express');
 const router = express.Router();
 const { catalog } = require('../../tools/searchCatalog.tool');

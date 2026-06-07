@@ -1,8 +1,3 @@
-/**
- * Conversation Model
- * Stores conversation turns between users and the AI assistant
- */
-
 module.exports = (sequelize, DataTypes) => {
   const Conversation = sequelize.define('Conversation', {
     id: {
