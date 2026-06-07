@@ -1,42 +1,66 @@
 /**
  * Sales Agent
- * Main agent loop with Groq tool use
+ * Main agent loop with explicit tool execution (no complex loop)
  */
 
 const { Groq } = require('groq-sdk');
 const config = require('../config/env');
-const { TOOL_DEFINITIONS, TOOL_HANDLERS } = require('./toolRegistry');
+const { TOOL_HANDLERS } = require('./toolRegistry');
 const memoryStore = require('../memory');
 const logger = require('../config/logger');
+const { catalog } = require('../tools/searchCatalog.tool');
 
 const groq = new Groq({ apiKey: config.groqApiKey });
 
-const SYSTEM_PROMPT = `You are an expert, friendly sales assistant for TechCorp Solutions. Your job is to help prospects understand our product plans and pricing.
+const SYSTEM_PROMPT = `You are an expert, friendly sales assistant for TechCorp Solutions. Help prospects understand our product plans and pricing.
 
-RULES YOU MUST FOLLOW:
-1. ALWAYS call get_user_memory at the very start to check what this user has discussed before.
-2. ALWAYS call search_catalog before answering ANY question about pricing, features, or plans.
-3. Never answer product questions from your own training knowledge — only from catalog search results.
-4. Be concise, helpful, and reference specific plan names and prices from the catalog.
-5. If you are uncertain or the question is outside your knowledge, call flag_for_human.
+Instructions:
+1. Use the provided context about the user and products to answer questions
+2. Be concise and specific with prices and features
+3. If you don't have enough information, say so honestly
+4. Reference previous conversation context when available`;
 
-CONVERSATION STYLE:
-- Be warm and professional
-- Reference previous conversations if available
-- Ask clarifying questions if needed
-- Highlight relevant features based on user's stated needs`;
-
-const MAX_ITERATIONS = 10;
+/**
+ * Generate a fallback response when LLM fails
+ */
+function generateFallbackResponse(userMessage) {
+  const products = catalog.products;
+  const lowerMsg = userMessage.toLowerCase();
+  
+  if (lowerMsg.includes('enterprise')) {
+    const enterprise = products.find(p => p.name.toLowerCase() === 'enterprise');
+    if (enterprise) {
+      return `The Enterprise plan costs ${enterprise.price} (${enterprise.annual_price}) and includes: ${enterprise.features.join(', ')}. It's ideal for ${enterprise.ideal_for}.`;
+    }
+  }
+  
+  if (lowerMsg.includes('growth')) {
+    const growth = products.find(p => p.name.toLowerCase() === 'growth');
+    if (growth) {
+      return `The Growth plan costs ${growth.price} (${growth.annual_price}) and includes: ${growth.features.join(', ')}. It's ideal for ${growth.ideal_for}.`;
+    }
+  }
+  
+  if (lowerMsg.includes('starter')) {
+    const starter = products.find(p => p.name.toLowerCase() === 'starter');
+    if (starter) {
+      return `The Starter plan costs ${starter.price} (${starter.annual_price}) and includes: ${starter.features.join(', ')}. It's ideal for ${starter.ideal_for}.`;
+    }
+  }
+  
+  if (lowerMsg.includes('pricing') || lowerMsg.includes('cost') || lowerMsg.includes('price')) {
+    return `We offer three plans:\n\n• Starter: $49/month ($470/year) - Best for freelancers\n• Growth: $199/month ($1,900/year) - Best for growing teams\n• Enterprise: $499/month ($4,790/year) - Best for large organizations\n\nWhich plan interests you?`;
+  }
+  
+  return `I'd be happy to help you with our sales plans. We offer Starter, Growth, and Enterprise options. What would you like to know about them?`;
+}
 
 /**
  * Extract facts from a response
- * @param {string} response - The agent's response
- * @returns {string[]} Extracted facts
  */
 function extractFacts(response) {
   const facts = [];
   
-  // Plan mentions
   const planPattern = /\b(Starter|Growth|Enterprise)\b/gi;
   const plans = response.match(planPattern);
   if (plans) {
@@ -46,7 +70,6 @@ function extractFacts(response) {
     });
   }
   
-  // Feature mentions (SSO, audit logs, etc.)
   const featurePatterns = [
     { pattern: /\b(sso|single.sign.on)\b/i, fact: 'User needs SSO' },
     { pattern: /\baudit\s*(logs?)?\b/i, fact: 'User interested in audit logs' },
@@ -61,136 +84,125 @@ function extractFacts(response) {
     }
   });
   
-  // Budget mentions
-  const budgetPattern = /\$?(\d+(?:,\d{3})*(?:\.\d{2})?)\s*(per\s*month|\/mo|monthly)/i;
-  const budgetMatch = response.match(budgetPattern);
-  if (budgetMatch) {
-    facts.push(`User mentioned budget around $${budgetMatch[1]}/month`);
-  }
-  
-  return [...new Set(facts)]; // Remove duplicates
+  return [...new Set(facts)];
 }
 
 /**
  * Run the sales agent
- * @param {string} userId - The user ID
- * @param {string} userMessage - The user's message
- * @param {string} sessionId - The session ID
- * @returns {Promise<Object>} Agent response
  */
 async function runAgent(userId, userMessage, sessionId) {
-  logger.info(`Running agent for user ${userId}, session ${sessionId}`);
+  logger.info(`Running agent for user ${userId}`);
   
-  // Step 1: Build initial messages array
-  const messages = [
-    { role: 'system', content: SYSTEM_PROMPT },
-    { role: 'user', content: userMessage }
-  ];
-  
-  // Step 2: Track tools called
   const toolsCalled = [];
-  
-  // Step 3: Agent loop with max iteration guard
-  let iterations = 0;
   let finalResponse = '';
   
-  while (iterations < MAX_ITERATIONS) {
-    iterations++;
-    logger.debug(`Agent iteration ${iterations}`);
-    
+  try {
+    // Step 1: Get user memory
+    logger.info('Step 1: Fetching user memory');
+    let userMemory = { facts: [], recentContext: [] };
     try {
-      const completion = await groq.chat.completions.create({
+      userMemory = await TOOL_HANDLERS['get_user_memory']({ user_id: userId });
+      toolsCalled.push('get_user_memory');
+      logger.info(`Found ${userMemory.facts.length} facts`);
+    } catch (error) {
+      logger.warn('Failed to get user memory:', error.message);
+    }
+    
+    // Step 2: Search catalog
+    logger.info('Step 2: Searching catalog');
+    let catalogResults = { products: catalog.products, addons: catalog.addons, faq: catalog.faq };
+    try {
+      catalogResults = await TOOL_HANDLERS['search_catalog']({ query: userMessage });
+      toolsCalled.push('search_catalog');
+      logger.info(`Catalog search returned ${catalogResults.products.length} products`);
+    } catch (error) {
+      logger.warn('Failed to search catalog:', error.message);
+    }
+    
+    // Step 3: Build the prompt with context
+    const memorySection = userMemory.facts.length > 0 
+      ? `Known facts about this user:\n${userMemory.facts.map(f => `- ${f}`).join('\n')}\n\n`
+      : '';
+    
+    const historySection = userMemory.recentContext.length > 0
+      ? `Recent conversation:\n${userMemory.recentContext.slice(-3).map(m => `${m.role}: ${m.content.substring(0, 100)}...`).join('\n')}\n\n`
+      : '';
+    
+    const catalogSection = `Product Information:\n${JSON.stringify(catalogResults.products, null, 2)}\n\nFAQ:\n${JSON.stringify(catalogResults.faq, null, 2)}`;
+    
+    const fullPrompt = `${memorySection}${historySection}${catalogSection}\n\nUser asks: "${userMessage}"\n\nProvide a helpful, accurate response based on the product information above. Be concise and friendly.`;
+    
+    // Step 4: Call Groq API
+    logger.info('Step 3: Calling Groq API');
+    
+    let completion;
+    try {
+      completion = await groq.chat.completions.create({
         model: 'llama-3.3-70b-versatile',
-        messages,
-        tools: TOOL_DEFINITIONS,
-        tool_choice: 'auto',
-        max_tokens: 1024,
+        messages: [
+          { role: 'system', content: SYSTEM_PROMPT },
+          { role: 'user', content: fullPrompt }
+        ],
+        max_tokens: 800,
         temperature: 0.7
       });
+    } catch (groqError) {
+      logger.error('Groq API call failed:', groqError.message);
+      // Use fallback
+      finalResponse = generateFallbackResponse(userMessage);
+      logger.info('Used fallback response');
+    }
+    
+    // Process successful response
+    if (!finalResponse && completion) {
+      logger.debug('Groq response structure:', JSON.stringify(Object.keys(completion)));
       
-      const message = completion.choices[0].message;
-      
-      // Step 4: Check for tool calls
-      if (message.tool_calls && message.tool_calls.length > 0) {
-        // Append assistant message
-        messages.push(message);
-        
-        // Execute each tool call
-        for (const toolCall of message.tool_calls) {
-          const toolName = toolCall.function.name;
-          logger.info(`Tool called: ${toolName}`);
-          
-          let toolArgs;
-          try {
-            toolArgs = JSON.parse(toolCall.function.arguments);
-          } catch (parseError) {
-            logger.error(`Failed to parse tool arguments for ${toolName}:`, parseError.message);
-            toolArgs = {};
-          }
-          
-          // Execute the tool
-          const handler = TOOL_HANDLERS[toolName];
-          let toolResult;
-          
-          if (handler) {
-            try {
-              toolResult = await handler(toolArgs);
-              toolsCalled.push(toolName);
-            } catch (toolError) {
-              logger.error(`Tool ${toolName} failed:`, toolError.message);
-              toolResult = { error: toolError.message };
-            }
-          } else {
-            logger.error(`Unknown tool: ${toolName}`);
-            toolResult = { error: `Unknown tool: ${toolName}` };
-          }
-          
-          // Append tool result
-          messages.push({
-            role: 'tool',
-            tool_call_id: toolCall.id,
-            content: JSON.stringify(toolResult)
-          });
+      if (completion.choices && Array.isArray(completion.choices) && completion.choices.length > 0) {
+        const choice = completion.choices[0];
+        if (choice.message && choice.message.content) {
+          finalResponse = choice.message.content;
+          logger.info('Successfully generated response from Groq');
+        } else {
+          logger.error('No content in message:', choice);
+          finalResponse = generateFallbackResponse(userMessage);
         }
-        
-        // Continue loop for next iteration
-        continue;
+      } else {
+        logger.error('Unexpected response structure:', JSON.stringify(completion));
+        finalResponse = generateFallbackResponse(userMessage);
       }
-      
-      // Step 5: No tool calls, we have the final response
-      finalResponse = message.content || 'I apologize, but I could not generate a response.';
-      break;
-      
-    } catch (error) {
-      logger.error('Groq API error:', error.message);
-      throw error;
     }
-  }
-  
-  if (iterations >= MAX_ITERATIONS && !finalResponse) {
-    logger.warn('Agent reached max iterations without response');
-    finalResponse = 'I apologize, but I am having trouble processing your request. Let me escalate this to our team.';
-  }
-  
-  // Step 6: Extract and save facts
-  const facts = extractFacts(finalResponse);
-  for (const fact of facts) {
-    try {
-      await memoryStore.saveFact(userId, fact, sessionId);
-      logger.debug(`Saved fact: ${fact}`);
-    } catch (error) {
-      logger.error('Failed to save fact:', error.message);
+    
+    // Step 5: Extract and save facts
+    if (finalResponse) {
+      const facts = extractFacts(finalResponse);
+      for (const fact of facts) {
+        try {
+          await memoryStore.saveFact(userId, fact, sessionId);
+          logger.debug(`Saved fact: ${fact}`);
+        } catch (error) {
+          logger.error('Failed to save fact:', error.message);
+        }
+      }
     }
+    
+    logger.info(`Agent completed. Tools: ${toolsCalled.join(', ') || 'none'}`);
+    
+    return {
+      response: finalResponse || generateFallbackResponse(userMessage),
+      toolsCalled,
+      sessionId
+    };
+    
+  } catch (error) {
+    logger.error('Unexpected agent error:', error.message);
+    logger.error('Stack:', error.stack);
+    
+    return {
+      response: generateFallbackResponse(userMessage),
+      toolsCalled,
+      sessionId
+    };
   }
-  
-  logger.info(`Agent completed for user ${userId}, tools called: ${toolsCalled.join(', ') || 'none'}`);
-  
-  // Step 7: Return response
-  return {
-    response: finalResponse,
-    toolsCalled,
-    sessionId
-  };
 }
 
 module.exports = {

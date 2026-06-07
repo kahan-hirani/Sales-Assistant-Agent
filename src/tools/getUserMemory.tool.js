@@ -30,18 +30,19 @@ async function getUserMemory({ user_id }) {
 
 /**
  * Groq Tool Definition for get_user_memory
+ * Compatible with Groq function calling API
  */
 const GET_USER_MEMORY_DEF = {
   type: 'function',
   function: {
     name: 'get_user_memory',
-    description: 'Retrieves what this user has previously discussed and any known facts about them. Always call this at the start of every conversation.',
+    description: 'Retrieves what this user has previously discussed and any known facts about them. Always call this tool at the very start of every conversation to check conversation history.',
     parameters: {
       type: 'object',
       properties: {
         user_id: {
           type: 'string',
-          description: 'The user ID to look up'
+          description: 'The unique user ID identifier to look up memory for'
         }
       },
       required: ['user_id']

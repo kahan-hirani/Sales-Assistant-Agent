@@ -133,18 +133,19 @@ function searchCatalog({ query }) {
 
 /**
  * Groq Tool Definition for search_catalog
+ * Compatible with Groq function calling API
  */
 const SEARCH_CATALOG_DEF = {
   type: 'function',
   function: {
     name: 'search_catalog',
-    description: 'Search the product catalog for pricing, features, and plan information. Always call this before answering any product question.',
+    description: 'Search the product catalog for pricing, features, and plan information. You MUST call this tool before answering ANY question about products, pricing, features, or plans. Extract keywords from the user question and pass them as the query parameter.',
     parameters: {
       type: 'object',
       properties: {
         query: {
           type: 'string',
-          description: 'The search query, e.g. "enterprise pricing SSO"'
+          description: 'Search keywords extracted from the user question. Include relevant terms like plan names, features, or pricing. Example: "enterprise pricing sso" or "growth plan features"'
         }
       },
       required: ['query']
@@ -155,5 +156,5 @@ const SEARCH_CATALOG_DEF = {
 module.exports = {
   searchCatalog,
   SEARCH_CATALOG_DEF,
-  catalog // Export for testing
+  catalog
 };
