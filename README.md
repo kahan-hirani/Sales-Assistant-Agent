@@ -779,4 +779,3 @@ For issues or questions:
 - [Express](https://expressjs.com/) for web framework
 - [Railway](https://railway.app/) for easy deployment
 
-**Built with ❤️ by the Sales Agent Team**
