@@ -1,6 +1,7 @@
 /**
  * Sequelize Models Index
  * Initializes Sequelize and exports all models
+ * Optimized for Supabase with connection pooling and retry logic
  */
 
 const { Sequelize, DataTypes } = require('sequelize');
@@ -13,15 +14,29 @@ const config = require('../../config/database')[env];
 
 let sequelize;
 
-// Configure Sequelize with retry logic for local development
+// Validate database URL
+if (!config.url) {
+  logger.error('DATABASE_URL is not configured!');
+  throw new Error('DATABASE_URL environment variable is required');
+}
+
+// Detect Supabase
+const isSupabase = config.url.includes('supabase.co') || 
+                   config.url.includes('aws-0-');
+
+if (isSupabase) {
+  logger.info('Detected Supabase database connection');
+}
+
+// Configure Sequelize with enhanced options for cloud databases
 const sequelizeOptions = {
   dialect: config.dialect,
   dialectOptions: config.dialectOptions,
   logging: config.logging === false ? false : (msg) => logger.debug(msg),
   pool: config.pool || {
-    max: 5,
+    max: isSupabase ? 5 : 10,  // Conservative for Supabase
     min: 0,
-    acquire: 30000,
+    acquire: 60000,
     idle: 10000
   },
   retry: {
@@ -30,18 +45,28 @@ const sequelizeOptions = {
       /SequelizeConnectionError/,
       /SequelizeConnectionRefusedError/,
       /SequelizeHostNotReachableError/,
-      /SequelizeInvalidConnectionError/
-    ]
+      /SequelizeInvalidConnectionError/,
+      /Connection terminated unexpectedly/,
+      /ECONNRESET/,
+      /ETIMEDOUT/,
+      /ECONNREFUSED/
+    ],
+    backoffBase: 1000,  // Start with 1s delay
+    backoffExponent: 1.5  // Increase delay between retries
+  },
+  // Connection timeout settings
+  dialectOptions: {
+    ...config.dialectOptions,
+    connectTimeout: 60000  // 60 seconds
   }
 };
 
-if (config.url) {
+try {
   sequelize = new Sequelize(config.url, sequelizeOptions);
-} else {
-  sequelize = new Sequelize(config.database, config.username, config.password, {
-    host: config.host,
-    ...sequelizeOptions
-  });
+  logger.info('Sequelize initialized successfully');
+} catch (error) {
+  logger.error('Failed to initialize Sequelize:', error.message);
+  throw error;
 }
 
 // Import models
@@ -52,14 +77,35 @@ const EvalLog = require('./EvalLog')(sequelize, DataTypes);
 // Define associations (if any)
 // Currently no foreign key relationships needed between these models
 
-// Test database connection
-const authenticate = async () => {
+// Test database connection with retry
+const authenticate = async (retries = 3) => {
+  for (let i = 0; i < retries; i++) {
+    try {
+      await sequelize.authenticate();
+      logger.info('Database connection established successfully');
+      return;
+    } catch (error) {
+      logger.error(`Database connection attempt ${i + 1}/${retries} failed:`, error.message);
+      
+      if (i < retries - 1) {
+        const delay = Math.pow(2, i) * 1000;  // Exponential backoff: 1s, 2s, 4s
+        logger.info(`Retrying in ${delay}ms...`);
+        await new Promise(resolve => setTimeout(resolve, delay));
+      } else {
+        logger.error('All database connection attempts failed');
+        throw error;
+      }
+    }
+  }
+};
+
+// Graceful shutdown handler
+const closeConnection = async () => {
   try {
-    await sequelize.authenticate();
-    logger.info('Database connection established successfully');
+    await sequelize.close();
+    logger.info('Database connection closed gracefully');
   } catch (error) {
-    logger.error('Unable to connect to the database:', error.message);
-    throw error;
+    logger.error('Error closing database connection:', error.message);
   }
 };
 
@@ -69,5 +115,7 @@ module.exports = {
   Conversation,
   MemoryFact,
   EvalLog,
-  authenticate
+  authenticate,
+  closeConnection,
+  isSupabase
 };
