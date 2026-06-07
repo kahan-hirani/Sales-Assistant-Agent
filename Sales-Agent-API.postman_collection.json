@@ -7,7 +7,7 @@
   },
   "item": [
     {
-      "name": "🚀 Getting Started",
+      "name": "Getting Started",
       "item": [
         {
           "name": "Health Check",
@@ -98,7 +98,7 @@
       "description": "Health check and catalog retrieval endpoints to verify API connectivity"
     },
     {
-      "name": "💬 Chat Endpoints",
+      "name": "Chat Endpoints",
       "item": [
         {
           "name": "Send Message (First Conversation)",
@@ -392,7 +392,7 @@
       "description": "Main chat endpoints for interacting with the sales agent"
     },
     {
-      "name": "📊 History & Memory",
+      "name": "History & Memory",
       "item": [
         {
           "name": "Get Conversation History",
@@ -498,7 +498,7 @@
       "description": "Endpoints for retrieving and managing conversation history and user memory"
     },
     {
-      "name": "📈 Evaluations & Analytics",
+      "name": "Evaluations & Analytics",
       "item": [
         {
           "name": "Get User Eval Summary",
@@ -600,7 +600,7 @@
       "description": "Quality evaluation and analytics endpoints for monitoring agent performance"
     },
     {
-      "name": "🔧 Utilities",
+      "name": "Utilities",
       "item": [
         {
           "name": "Setup New Test User",
@@ -636,7 +636,7 @@
                   "pm.environment.set('session_prefix', sessionPrefix);",
                   "pm.environment.set('custom_user_id', 'custom_' + timestamp);",
                   "",
-                  "console.log('✅ New test user created:');",
+                  "console.log('New test user created:');",
                   "console.log('   User ID:', newUserId);",
                   "console.log('   Session Prefix:', sessionPrefix);",
                   "",
@@ -691,7 +691,7 @@
                   "    pm.environment.unset(varName);",
                   "});",
                   "",
-                  "console.log('🧹 Cleared', varsToClear.length, 'environment variables');",
+                  "console.log('Cleared', varsToClear.length, 'environment variables');",
                   "",
                   "pm.test('Variables cleared', function() {",
                   "    pm.expect(pm.environment.get('user_id')).to.be.undefined;",
@@ -706,7 +706,7 @@
       "description": "Utility requests for managing test environment and variables"
     },
     {
-      "name": "🧠 Memory Summarization (Bonus)",
+      "name": "Memory Summarization (Bonus)",
       "item": [
         {
           "name": "Get Summarization Status",
@@ -741,7 +741,7 @@
                   "",
                   "// Show status in console",
                   "const data = pm.response.json().data;",
-                  "console.log('📊 Summarization Status:');",
+                  "console.log('Summarization Status:');",
                   "console.log('  Total Messages:', data.totalMessages);",
                   "console.log('  Threshold:', data.threshold);",
                   "console.log('  Until Summarization:', data.messagesUntilSummarization);",
@@ -783,12 +783,12 @@
                   "// Log the result",
                   "const data = pm.response.json().data;",
                   "if (data.summarized) {",
-                  "    console.log('✅ Summarization successful!');",
+                  "    console.log('Summarization successful!');",
                   "    console.log('  Messages compressed:', data.messagesCompressed);",
                   "    console.log('  Messages kept:', data.messagesKept);",
                   "    console.log('  Summary:', data.summary);",
                   "} else {",
-                  "    console.log('ℹ️ No summarization performed:', data.reason);",
+                  "    console.log('No summarization performed:', data.reason);",
                   "}"
                 ],
                 "type": "text/javascript"
@@ -821,7 +821,7 @@
               "listen": "test",
               "script": {
                 "exec": [
-                  "console.log('🧠 MEMORY SUMMARIZATION TEST WORKFLOW');",
+                  "console.log('MEMORY SUMMARIZATION TEST WORKFLOW');",
                   "console.log('=====================================');",
                   "console.log('');",
                   "console.log('Step 1: Send 20+ messages to trigger automatic summarization');",
@@ -872,7 +872,7 @@
           "console.log('Response time:', responseTime + 'ms');",
           "",
           "if (responseTime > 5000) {",
-          "    console.warn('⚠️ Slow response detected (>5s)');",
+          "    console.warn('Slow response detected (>5s)');",
           "}"
         ]
       }
