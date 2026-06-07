@@ -6,7 +6,8 @@ WORKDIR /app
 COPY package*.json ./
 
 # Install dependencies
-RUN npm ci --only=production
+# Use npm install instead of npm ci to handle version mismatches
+RUN npm install --omit=dev
 
 # Copy application code
 COPY . .
