@@ -1,0 +1,35 @@
+{
+  "products": [
+    {
+      "name": "Starter",
+      "price": "$49/mo",
+      "annual_price": "$470/yr",
+      "features": ["5 users", "API access", "email support", "1GB storage", "basic analytics"],
+      "ideal_for": "Freelancers and small teams getting started"
+    },
+    {
+      "name": "Growth",
+      "price": "$199/mo",
+      "annual_price": "$1,900/yr",
+      "features": ["25 users", "webhooks", "priority support", "10GB storage", "advanced analytics", "custom integrations"],
+      "ideal_for": "Growing startups scaling their operations"
+    },
+    {
+      "name": "Enterprise",
+      "price": "$499/mo",
+      "annual_price": "$4,790/yr",
+      "features": ["unlimited users", "SSO", "audit logs", "SLA 99.9%", "dedicated support", "unlimited storage", "custom contracts"],
+      "ideal_for": "Large organizations needing compliance and scale"
+    }
+  ],
+  "addons": [
+    { "name": "Extra Storage", "price": "$10/mo per 10GB" },
+    { "name": "Additional API calls", "price": "$0.001 per call above limit" },
+    { "name": "White-label", "price": "$200/mo" }
+  ],
+  "faq": [
+    { "q": "Is there a free trial?", "a": "Yes, all plans include a 14-day free trial, no credit card required." },
+    { "q": "Can I switch plans?", "a": "Yes, upgrade or downgrade anytime. Charges are prorated." },
+    { "q": "What payment methods?", "a": "All major credit cards and ACH bank transfers for annual plans." }
+  ]
+}

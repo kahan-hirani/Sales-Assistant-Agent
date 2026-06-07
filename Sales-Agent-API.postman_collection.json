@@ -1,0 +1,751 @@
+{
+  "info": {
+    "_postman_id": "sales-agent-api-collection-v1",
+    "name": "Sales Agent API - Production",
+    "description": "Production-ready Postman collection for the Sales Agent API. Includes all endpoints with pre-request scripts, tests, and environment variables for seamless testing.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "🚀 Getting Started",
+      "item": [
+        {
+          "name": "Health Check",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/health",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "health"]
+            },
+            "description": "Check API health status and database connectivity"
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function() {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Response has correct structure', function() {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('status');",
+                  "    pm.expect(jsonData).to.have.property('db');",
+                  "    pm.expect(jsonData.status).to.eql('ok');",
+                  "});",
+                  "",
+                  "pm.test('Database is connected', function() {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.db).to.eql('connected');",
+                  "});",
+                  "",
+                  "// Store server timestamp for debugging",
+                  "const jsonData = pm.response.json();",
+                  "pm.environment.set('last_health_check', jsonData.timestamp);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get Product Catalog",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/catalog",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "catalog"]
+            },
+            "description": "Retrieve the full product catalog including plans, addons, and FAQ"
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function() {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Response has correct structure', function() {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.success).to.be.true;",
+                  "    pm.expect(jsonData.data).to.have.property('products');",
+                  "    pm.expect(jsonData.data).to.have.property('addons');",
+                  "    pm.expect(jsonData.data).to.have.property('faq');",
+                  "});",
+                  "",
+                  "pm.test('Has all three product tiers', function() {",
+                  "    const jsonData = pm.response.json();",
+                  "    const products = jsonData.data.products;",
+                  "    pm.expect(products).to.have.lengthOf(3);",
+                  "    pm.expect(products.map(p => p.name)).to.include.members(['Starter', 'Growth', 'Enterprise']);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        }
+      ],
+      "description": "Health check and catalog retrieval endpoints to verify API connectivity"
+    },
+    {
+      "name": "💬 Chat Endpoints",
+      "item": [
+        {
+          "name": "Send Message (First Conversation)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"message\": \"{{first_message}}\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/chat/{{user_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "chat", "{{user_id}}"]
+            },
+            "description": "Start a new conversation with the sales agent. The agent will call get_user_memory and search_catalog tools automatically."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "// Generate random user ID if not set",
+                  "if (!pm.environment.get('user_id')) {",
+                  "    const randomId = 'user_' + Math.random().toString(36).substring(2, 10);",
+                  "    pm.environment.set('user_id', randomId);",
+                  "}",
+                  "",
+                  "// Set default first message if not set",
+                  "if (!pm.environment.get('first_message')) {",
+                  "    pm.environment.set('first_message', 'What does the Enterprise plan cost and what features does it include?');",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function() {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Response has correct envelope structure', function() {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.success).to.be.true;",
+                  "    pm.expect(jsonData.data).to.have.property('response');",
+                  "    pm.expect(jsonData.data).to.have.property('eval');",
+                  "    pm.expect(jsonData.data).to.have.property('tools_called');",
+                  "    pm.expect(jsonData.data).to.have.property('session_id');",
+                  "});",
+                  "",
+                  "pm.test('Response contains text', function() {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.data.response).to.be.a('string');",
+                  "    pm.expect(jsonData.data.response.length).to.be.greaterThan(0);",
+                  "});",
+                  "",
+                  "pm.test('Tools were called', function() {",
+                  "    const jsonData = pm.response.json();",
+                  "    const tools = jsonData.data.tools_called;",
+                  "    pm.expect(tools).to.be.an('array');",
+                  "    pm.expect(tools.length).to.be.greaterThan(0);",
+                  "    pm.expect(tools).to.include('get_user_memory');",
+                  "    pm.expect(tools).to.include('search_catalog');",
+                  "});",
+                  "",
+                  "pm.test('Eval block is present and valid', function() {",
+                  "    const jsonData = pm.response.json();",
+                  "    const eval = jsonData.data.eval;",
+                  "    pm.expect(eval).to.have.property('groundedness');",
+                  "    pm.expect(eval).to.have.property('relevance');",
+                  "    pm.expect(eval).to.have.property('confidence');",
+                  "    pm.expect(eval).to.have.property('flagged');",
+                  "    pm.expect(eval).to.have.property('reasoning');",
+                  "    ",
+                  "    // Validate score ranges",
+                  "    pm.expect(eval.groundedness).to.be.within(0, 1);",
+                  "    pm.expect(eval.relevance).to.be.within(0, 1);",
+                  "    pm.expect(eval.confidence).to.be.within(0, 1);",
+                  "    pm.expect(eval.flagged).to.be.a('boolean');",
+                  "});",
+                  "",
+                  "// Store session_id for subsequent requests",
+                  "const jsonData = pm.response.json();",
+                  "pm.environment.set('session_id_1', jsonData.data.session_id);",
+                  "pm.environment.set('last_response', jsonData.data.response);",
+                  "",
+                  "// Log for debugging",
+                  "console.log('Session ID:', jsonData.data.session_id);",
+                  "console.log('Tools called:', jsonData.data.tools_called);",
+                  "console.log('Eval confidence:', jsonData.data.eval.confidence);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Send Message (Follow-up - Tests Memory)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"message\": \"{{follow_up_message}}\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/chat/{{user_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "chat", "{{user_id}}"]
+            },
+            "description": "Send a follow-up message to test memory persistence. Use the same user_id from the first request."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "// Ensure user_id exists from previous request",
+                  "if (!pm.environment.get('user_id')) {",
+                  "    pm.environment.set('user_id', 'user_demo_' + Date.now());",
+                  "}",
+                  "",
+                  "// Set follow-up message",
+                  "if (!pm.environment.get('follow_up_message')) {",
+                  "    pm.environment.set('follow_up_message', 'Does the plan we talked about include SSO? Also what about audit logs?');",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function() {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('New session ID generated', function() {",
+                  "    const jsonData = pm.response.json();",
+                  "    const currentSessionId = jsonData.data.session_id;",
+                  "    const previousSessionId = pm.environment.get('session_id_1');",
+                  "    ",
+                  "    // Should be a different session ID (demonstrates session tracking)",
+                  "    pm.expect(currentSessionId).to.not.eql(previousSessionId);",
+                  "    ",
+                  "    // Store new session ID",
+                  "    pm.environment.set('session_id_2', currentSessionId);",
+                  "});",
+                  "",
+                  "pm.test('Memory tools still called', function() {",
+                  "    const jsonData = pm.response.json();",
+                  "    const tools = jsonData.data.tools_called;",
+                  "    pm.expect(tools).to.include('get_user_memory');",
+                  "});",
+                  "",
+                  "pm.test('Response references previous context', function() {",
+                  "    const jsonData = pm.response.json();",
+                  "    const response = jsonData.data.response.toLowerCase();",
+                  "    ",
+                  "    // Should mention enterprise or previous context",
+                  "    const hasContext = response.includes('enterprise') || ",
+                  "                        response.includes('plan') || ",
+                  "                        response.includes('discussed') ||",
+                  "                        response.includes('earlier');",
+                  "    ",
+                  "    pm.expect(hasContext).to.be.true;",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Send Message (Custom Question)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"message\": \"{{custom_question}}\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/chat/{{custom_user_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "chat", "{{custom_user_id}}"]
+            },
+            "description": "Send a custom question. Edit the 'custom_question' environment variable to test different scenarios."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "// Set custom user ID if not exists",
+                  "if (!pm.environment.get('custom_user_id')) {",
+                  "    pm.environment.set('custom_user_id', 'custom_user_' + Math.random().toString(36).substring(2, 8));",
+                  "}",
+                  "",
+                  "// Set default custom question",
+                  "if (!pm.environment.get('custom_question')) {",
+                  "    pm.environment.set('custom_question', 'What is the difference between Starter and Growth plans?');",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function() {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "const jsonData = pm.response.json();",
+                  "console.log('Agent Response:', jsonData.data.response);",
+                  "console.log('Evaluation:', jsonData.data.eval);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Send Invalid Message (Validation Test)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"message\": \"\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/chat/{{user_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "chat", "{{user_id}}"]
+            },
+            "description": "Test validation error handling with empty message"
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 400 for validation error', function() {",
+                  "    pm.response.to.have.status(400);",
+                  "});",
+                  "",
+                  "pm.test('Error response has correct structure', function() {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.success).to.be.false;",
+                  "    pm.expect(jsonData.error).to.exist;",
+                  "    pm.expect(jsonData.error.message).to.exist;",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        }
+      ],
+      "description": "Main chat endpoints for interacting with the sales agent"
+    },
+    {
+      "name": "📊 History & Memory",
+      "item": [
+        {
+          "name": "Get Conversation History",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/chat/{{user_id}}/history",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "chat", "{{user_id}}", "history"]
+            },
+            "description": "Retrieve all conversation history for a user across all sessions"
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function() {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Response has correct structure', function() {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.success).to.be.true;",
+                  "    pm.expect(jsonData.data).to.have.property('user_id');",
+                  "    pm.expect(jsonData.data).to.have.property('turns');",
+                  "    pm.expect(jsonData.data).to.have.property('total');",
+                  "});",
+                  "",
+                  "pm.test('Turns array is valid', function() {",
+                  "    const jsonData = pm.response.json();",
+                  "    const turns = jsonData.data.turns;",
+                  "    ",
+                  "    pm.expect(turns).to.be.an('array');",
+                  "    ",
+                  "    if (turns.length > 0) {",
+                  "        turns.forEach(function(turn) {",
+                  "            pm.expect(turn).to.have.property('id');",
+                  "            pm.expect(turn).to.have.property('session_id');",
+                  "            pm.expect(turn).to.have.property('role');",
+                  "            pm.expect(turn).to.have.property('content');",
+                  "            pm.expect(['user', 'assistant']).to.include(turn.role);",
+                  "        });",
+                  "    }",
+                  "    ",
+                  "    console.log('Total turns:', jsonData.data.total);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Delete User Memory (GDPR)",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/chat/{{user_id_to_delete}}/memory",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "chat", "{{user_id_to_delete}}", "memory"]
+            },
+            "description": "Delete all data for a user (GDPR compliance). This removes conversations, memory facts, and eval logs."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "// Set the user to delete (defaults to test user)",
+                  "if (!pm.environment.get('user_id_to_delete')) {",
+                  "    pm.environment.set('user_id_to_delete', pm.environment.get('user_id') || 'user_to_delete_123');",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function() {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Memory deleted successfully', function() {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.success).to.be.true;",
+                  "    pm.expect(jsonData.data.success).to.be.true;",
+                  "    pm.expect(jsonData.data.message).to.include('Memory wiped');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        }
+      ],
+      "description": "Endpoints for retrieving and managing conversation history and user memory"
+    },
+    {
+      "name": "📈 Evaluations & Analytics",
+      "item": [
+        {
+          "name": "Get User Eval Summary",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/chat/{{user_id}}/evals",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "chat", "{{user_id}}", "evals"]
+            },
+            "description": "Get evaluation statistics and detailed scores for a specific user"
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function() {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Response has summary and evals', function() {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.success).to.be.true;",
+                  "    pm.expect(jsonData.data).to.have.property('summary');",
+                  "    pm.expect(jsonData.data).to.have.property('evals');",
+                  "});",
+                  "",
+                  "pm.test('Summary has required fields', function() {",
+                  "    const jsonData = pm.response.json();",
+                  "    const summary = jsonData.data.summary;",
+                  "    ",
+                  "    pm.expect(summary).to.have.property('totalResponses');",
+                  "    pm.expect(summary).to.have.property('avgConfidence');",
+                  "    pm.expect(summary).to.have.property('avgGroundedness');",
+                  "    pm.expect(summary).to.have.property('avgRelevance');",
+                  "    pm.expect(summary).to.have.property('flaggedCount');",
+                  "    pm.expect(summary).to.have.property('flaggedPercentage');",
+                  "});",
+                  "",
+                  "// Log summary for visibility",
+                  "const summary = pm.response.json().data.summary;",
+                  "console.log('=== Evaluation Summary ===');",
+                  "console.log('Total Responses:', summary.totalResponses);",
+                  "console.log('Avg Confidence:', summary.avgConfidence?.toFixed(2));",
+                  "console.log('Avg Groundedness:', summary.avgGroundedness?.toFixed(2));",
+                  "console.log('Avg Relevance:', summary.avgRelevance?.toFixed(2));",
+                  "console.log('Flagged Count:', summary.flaggedCount);",
+                  "console.log('Flagged %:', summary.flaggedPercentage?.toFixed(1) + '%');"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get Global Eval Stats",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/evals/global/stats",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "evals", "global", "stats"]
+            },
+            "description": "Get aggregated evaluation statistics across all users"
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function() {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Has global stats structure', function() {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.success).to.be.true;",
+                  "    pm.expect(jsonData.data).to.have.property('summary');",
+                  "    pm.expect(jsonData.data.summary).to.have.property('totalEvals');",
+                  "    pm.expect(jsonData.data.summary).to.have.property('avgConfidence');",
+                  "});",
+                  "",
+                  "const summary = pm.response.json().data.summary;",
+                  "console.log('=== Global Stats ===');",
+                  "console.log('Total Evaluations:', summary.totalEvals);",
+                  "console.log('Overall Confidence:', summary.avgConfidence?.toFixed(2));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        }
+      ],
+      "description": "Quality evaluation and analytics endpoints for monitoring agent performance"
+    },
+    {
+      "name": "🔧 Utilities",
+      "item": [
+        {
+          "name": "Setup New Test User",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "https://postman-echo.com/get?test=setup",
+              "protocol": "https",
+              "host": ["postman-echo", "com"],
+              "path": ["get"],
+              "query": [
+                {
+                  "key": "test",
+                  "value": "setup"
+                }
+              ]
+            },
+            "description": "Utility request to initialize a new test user and session"
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "// Generate new user ID",
+                  "const timestamp = Date.now();",
+                  "const newUserId = 'test_user_' + timestamp;",
+                  "const sessionPrefix = 'sess_' + Math.random().toString(36).substring(2, 8);",
+                  "",
+                  "pm.environment.set('user_id', newUserId);",
+                  "pm.environment.set('session_prefix', sessionPrefix);",
+                  "pm.environment.set('custom_user_id', 'custom_' + timestamp);",
+                  "",
+                  "console.log('✅ New test user created:');",
+                  "console.log('   User ID:', newUserId);",
+                  "console.log('   Session Prefix:', sessionPrefix);",
+                  "",
+                  "pm.test('Environment variables set', function() {",
+                  "    pm.expect(pm.environment.get('user_id')).to.exist;",
+                  "    pm.expect(pm.environment.get('session_prefix')).to.exist;",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Clear All Environment Variables",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "https://postman-echo.com/get?clear=all",
+              "protocol": "https",
+              "host": ["postman-echo", "com"],
+              "path": ["get"],
+              "query": [
+                {
+                  "key": "clear",
+                  "value": "all"
+                }
+              ]
+            },
+            "description": "Clear all dynamically created environment variables"
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "// List of variables to clear",
+                  "const varsToClear = [",
+                  "    'user_id',",
+                  "    'session_id_1',",
+                  "    'session_id_2',",
+                  "    'custom_user_id',",
+                  "    'last_response',",
+                  "    'session_prefix',",
+                  "    'last_health_check',",
+                  "    'user_id_to_delete'",
+                  "];",
+                  "",
+                  "varsToClear.forEach(function(varName) {",
+                  "    pm.environment.unset(varName);",
+                  "});",
+                  "",
+                  "console.log('🧹 Cleared', varsToClear.length, 'environment variables');",
+                  "",
+                  "pm.test('Variables cleared', function() {",
+                  "    pm.expect(pm.environment.get('user_id')).to.be.undefined;",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        }
+      ],
+      "description": "Utility requests for managing test environment and variables"
+    }
+  ],
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "// Global pre-request script",
+          "console.log('Request:', pm.info.requestName);",
+          "console.log('Timestamp:', new Date().toISOString());"
+        ]
+      }
+    },
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "// Global test script - captures response time",
+          "const responseTime = pm.response.responseTime;",
+          "console.log('Response time:', responseTime + 'ms');",
+          "",
+          "if (responseTime > 5000) {",
+          "    console.warn('⚠️ Slow response detected (>5s)');",
+          "}"
+        ]
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:3000",
+      "type": "string",
+      "description": "Base URL for the API (local development)"
+    },
+    {
+      "key": "base_url_production",
+      "value": "https://your-app.railway.app",
+      "type": "string",
+      "description": "Production base URL (update after Railway deployment)"
+    }
+  ]
+}
