@@ -22,28 +22,36 @@ async function sendMessage(userId, message) {
   // Step 1: Generate fresh session ID
   const sessionId = uuidv4();
   
-  // Step 2: Save user message
-  await memoryStore.saveMessage({
-    userId,
-    sessionId,
-    role: 'user',
-    content: message,
-    toolsCalled: []
-  });
-  
-  // Step 3: Run agent
+  // Step 2: Run agent first (don't save user message yet)
+  // This ensures we don't have orphaned user messages if agent fails
   const { response, toolsCalled } = await runAgent(userId, message, sessionId);
   
-  // Step 4: Save assistant response
-  await memoryStore.saveMessage({
-    userId,
-    sessionId,
-    role: 'assistant',
-    content: response,
-    toolsCalled
-  });
+  // Step 3: Now save both messages together (transaction-like)
+  try {
+    // Save user message
+    await memoryStore.saveMessage({
+      userId,
+      sessionId,
+      role: 'user',
+      content: message,
+      toolsCalled: []
+    });
+    
+    // Save assistant response
+    await memoryStore.saveMessage({
+      userId,
+      sessionId,
+      role: 'assistant',
+      content: response,
+      toolsCalled
+    });
+  } catch (saveError) {
+    logger.error('Failed to save conversation:', saveError.message);
+    // Even if save fails, we still return the response to the user
+    // But log the error for investigation
+  }
   
-  // Step 5: Generate and save evaluation
+  // Step 4: Generate and save evaluation
   const evalResult = await generateAndSaveEval({
     userId,
     sessionId,
